@@ -7,30 +7,32 @@ const UserModel = require('./models/User.js');
 const PostModel = require('./models/Post.js');
 const cp = require('cookie-parser');
 const multer = require('multer');
+const { config } = require('dotenv');
 const uploadMiddleware = multer({ dest: 'uploads/' })
 const fs = require('fs')
 
 
 const app = express()
 const salt = bcrypt.genSaltSync(10)
-const jwt_secret = 'somecoolsecretthatnobodycandecode'
-const port = 5000
+const jwt_secret = process.env.JWT_SECRET
+const port = process.env.PORT||5000
 const host = 'localhost'
 
 //
-const db_uri = 'mongodb+srv://npaul:GLWbWufLLBHXoPcb@cluster0.jbeoqhz.mongodb.net/?retryWrites=true&w=majority'
+config({
+    path: './config.env'
+})
 
-// mongodb+srv://npaul:<password>@cluster0.jbeoqhz.mongodb.net/?retryWrites=true&w=majority
 
 app.use(cors({
     credentials: true,
-    origin: 'http://localhost:3000'
+    origin: `http://localhost:${process.env.FRONTEND_PORT}`
 }))
 app.use(express.json());
 app.use(cp())
 app.use('/uploads', express.static(__dirname+'/uploads'));
 
-mongoose.connect(db_uri).then(()=>{
+mongoose.connect(process.env.DB_URI).then(()=>{
     console.log('db connection established...');
 })
 
@@ -166,25 +168,8 @@ app.put('/post', uploadMiddleware.single('file'), async(req, res)=>{
                     content, 
                     cover: newPath? newPath : postDoc.cover
                 },
-                // { new: true }
             );
             res.json(doc)
-
-            // const postDoc = await PostModel.findById(id)
-            // const isAuthor = JSON.stringify(postDoc.author) === JSON.stringify(info.id)
-            // const errorString = 'you are not the author'
-            // if(!isAuthor){
-            //     return res.status(400).json(errorString)
-            // }else{
-            //     await postDoc.update({
-            //         title, 
-            //         summary, 
-            //         content, 
-            //         cover: newPath? newPath : postDoc.cover
-            //     })
-            //     console.log(postDoc)
-            //     res.json(postDoc)
-            // }
         }
     })
 
